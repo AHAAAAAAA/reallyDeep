@@ -1,0 +1,11 @@
+door
+table
+sofa
+stove/oven
+fire extinguisher
+bicycle
+microwave
+television/monitor
+stapler
+exit sign
+
