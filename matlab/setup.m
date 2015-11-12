@@ -1,6 +1,6 @@
 % Load data
-load('../data/nyu_depth_data_labeled.mat');
-%load('../data/nyu_depth_v2_labeled.mat');
+%load('../data/nyu_depth_data_labeled.mat');
+load('../data/nyu_depth_v2_labeled.mat');
 
 % Training/testing split
 rng(42, 'twister');
