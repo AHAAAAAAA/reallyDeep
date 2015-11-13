@@ -3,9 +3,9 @@ clear,clc,close('all')
 load('dev_dataset.mat')
 %%
 clc
-image_ind = 1;
-label_val = 234;
-scale = 20;
+image_ind = 2;
+label_val = 5;
+scale = 4;
 image_val = images_trn(:,:,:,image_ind);
 image_gray = rgb2gray(image_val);
 image_gray = downsample(image_gray,scale);
