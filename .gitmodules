@@ -1,0 +1,3 @@
+[submodule "matlab/sparseFiltering"]
+	path = matlab/sparseFiltering
+	url = git://github.com/jngiam/sparseFiltering.git
