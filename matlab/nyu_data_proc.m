@@ -2,9 +2,9 @@
 clear,clc,close('all')
 load('dev_dataset.mat')
 %%
-clc
-image_ind = 2;
-label_val = 5;
+% clc
+image_ind = 8;% 8,6
+label_val = 5;% 5 for chair
 scale = 4;
 image_val = images_trn(:,:,:,image_ind);
 image_gray = rgb2gray(image_val);
@@ -13,11 +13,12 @@ image_gray = downsample(image_gray.',scale);
 image_gray = image_gray.';
 depth_val = depths_trn(:,:,image_ind);
 lab_img = labels_trn(:,:,image_ind);
-[obj_x_inds,obj_y_inds,n_pix,obj_dx,obj_dy,obj_pres] = extract_obj(lab_img,label_val);
+[obj_inds,obj_x_inds,obj_y_inds,n_pix,obj_dx,obj_dy,obj_pres] = extract_obj(lab_img,label_val);
 matrix_z = zeros(480,640);
-for i = 1:n_pix
-    matrix_z(obj_y_inds(i),obj_x_inds(i)) = 1;
-end
+matrix_z(obj_inds) = 1;
+% for i = 1:n_pix
+%     matrix_z(obj_y_inds(i),obj_x_inds(i)) = 1;
+% end
 im_x_mid = 640/2;
 im_y_mid = 480/2;
 obj_x_mid = mean(obj_x_inds);

@@ -3,7 +3,7 @@ clear,clc,close('all')
 load('../data/dev_dataset.mat')
 %%
 clc
-class_type = 'sofa';
+class_type = 'chair';
 c_points = 8;
 tic
 
@@ -16,12 +16,12 @@ length(trn_inds)
 tst_inds = find_rel_pics(labels_tst,class_ind);
 length(tst_inds)
 
-trn_inds = trn_inds(1:125);
-tst_inds = tst_inds(1:50);
+% trn_inds = trn_inds(1:125);
+% tst_inds = tst_inds(1:50);
 c_points = 10;
 im_x_mid = 640/2;
 im_y_mid = 480/2;
-
+%
 % Feature Training Extraction
 npix_trn = [];
 dx_trn = [];
@@ -36,19 +36,20 @@ cy_trn = [];
 avg_depth_trn = [];
 
 for ii=1:length(trn_inds)
-    ii
+    ii/length(trn_inds)*100
     jj = trn_inds(ii);
-
     % find image bounding box and centroid
-    [obj_x_inds,obj_y_inds,n_pix,obj_dx,obj_dy,obj_pres] = extract_obj(labels_trn(:,:,jj),class_ind);
+    [obj_inds,obj_x_inds,obj_y_inds,n_pix,obj_dx,obj_dy,obj_pres] = extract_obj(labels_trn(:,:,jj),class_ind);
     avg_depth = extract_object_depth(depths_trn(:,:,jj),labels_trn(:,:,jj),class_ind);
     obj_x_mid = mean(obj_x_inds);
     obj_y_mid = mean(obj_y_inds);
 
     % mask out image in grayscale
     image_gray = rgb2gray(images_trn(:,:,:,jj));
-    matrix_z = image_gray .* (labels_trn(:,:,jj)==class_ind);
-
+%     matrix_z = image_gray .* (labels_trn(:,:,jj)==class_ind);
+    matrix_z = zeros(480,640);
+    matrix_z(obj_inds) = 1;
+    %
     % center object
     x_shift = round(obj_x_mid-im_x_mid);
     y_shift = round(obj_y_mid-im_y_mid);
@@ -78,7 +79,8 @@ clc
 toc
 
 % collect all inputs together; TODO: should we add a bias term?
-x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, cn_trn, cx_trn, cy_trn];
+% x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, cn_trn, cx_trn, cy_trn];
+x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, tan(dx_trn/2), tan(dy_trn/2)];
 % x_in = [npix_trn, dx_trn, dy_trn, cn_trn, cx_trn, cy_trn];
 % x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn];%, cn_trn, cx_trn, cy_trn];
 y_lab = avg_depth_trn;
@@ -129,9 +131,9 @@ cy_tst = [];
 avg_depth_tst = [];
 
 for ii=1:length(tst_inds)
-    ii
+    ii/length(tst_inds)*100
     jj = tst_inds(ii);
-    [obj_x_inds,obj_y_inds,n_pix,obj_dx,obj_dy,obj_pres] = extract_obj(labels_tst(:,:,jj),class_ind);
+    [obj_inds,obj_x_inds,obj_y_inds,n_pix,obj_dx,obj_dy,obj_pres] = extract_obj(labels_tst(:,:,jj),class_ind);
     avg_depth = extract_object_depth(depths_tst(:,:,jj),labels_tst(:,:,jj),class_ind);
     obj_x_mid = mean(obj_x_inds);
     obj_y_mid = mean(obj_y_inds);
@@ -139,7 +141,9 @@ for ii=1:length(tst_inds)
 
     % mask out image in grayscale
     image_gray = rgb2gray(images_tst(:,:,:,jj));
-    matrix_z = image_gray .* (labels_tst(:,:,jj)==class_ind);
+%     matrix_z = image_gray .* (labels_tst(:,:,jj)==class_ind);
+    matrix_z = zeros(480,640);
+    matrix_z(obj_inds) = 1;    
 
     % center object
     x_shift = round(obj_x_mid-im_x_mid);
@@ -175,7 +179,8 @@ dy_tst = dy_tst.';
 x_tst = x_tst.';
 y_tst = y_tst.';
 avg_depth_tst = avg_depth_tst.';
-x_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, cn_tst, cx_tst, cy_tst];
+% x_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, cn_tst, cx_tst, cy_tst];
+x_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, tan(dx_tst/2), tan(dy_tst/2)];
 y_tst = avg_depth_tst;
 
 % do prediction
@@ -208,4 +213,5 @@ title(title_val)
 grid('on')
 boldify
 
-toc
+mean(err_trn)
+mean(err_tst)
