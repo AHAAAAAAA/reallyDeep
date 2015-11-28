@@ -1,8 +1,17 @@
 %%
-clear,clc,close('all')
-load('../data/dev_dataset.mat')
-%%
+%clear
 clc
+close('all')
+
+load('../data/dev_dataset.mat')
+addpath(genpath('./SparseFiltering/'))
+try
+  do_sparse_filtering;
+  sf_features = 20;
+catch
+  do_sparse_filtering=false;
+end
+
 class_type = 'chair';
 c_points = 8;
 tic
@@ -34,6 +43,15 @@ cy_trn = [];
 
 % Label Training Extraction
 avg_depth_trn = [];
+
+if do_sparse_filtering
+    img_lin_trn = double(reshape(images_trn, 3*640*480, []));
+    img_lin_tst = double(reshape(images_tst, 3*640*480, []));
+    lbl_lin_trn = double(reshape(labels_trn, 640*480, []));
+    lbl_lin_tst = double(reshape(labels_tst, 640*480, []));
+
+    sf_mtx = sparseFiltering(sf_features, [img_lin_trn; lbl_lin_trn==class_ind]);
+end
 
 for ii=1:length(trn_inds)
     ii/length(trn_inds)*100
