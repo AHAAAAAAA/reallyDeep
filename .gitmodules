@@ -1,3 +1,6 @@
 [submodule "matlab/sparseFiltering"]
 	path = matlab/sparseFiltering
 	url = git://github.com/jngiam/sparseFiltering.git
+[submodule "matlab/matconvnet"]
+	path = matlab/matconvnet
+	url = https://github.com/vlfeat/matconvnet.git
