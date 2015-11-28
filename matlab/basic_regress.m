@@ -7,6 +7,7 @@ load('../data/dev_dataset.mat')
 addpath(genpath('./SparseFiltering/'))
 try
   do_sparse_filtering;
+  sf_patch = 16;
   sf_features = 20;
 catch
   do_sparse_filtering=false;
@@ -45,11 +46,25 @@ cy_trn = [];
 avg_depth_trn = [];
 
 if do_sparse_filtering
-    img_lin_trn = double(reshape(images_trn, 3*640*480, []));
-    img_lin_tst = double(reshape(images_tst, 3*640*480, []));
-    lbl_lin_trn = double(reshape(labels_trn, 640*480, []));
-    lbl_lin_tst = double(reshape(labels_tst, 640*480, []));
+    N_trn = size(images_trn, 4);
+    N_tst = size(images_tst, 4);
+    % make patches of RGB+label, size sf_patch x sf_patch
+    patches_trn = zeros(sf_patch^2*4, N_trn*480*640/sf_patch^2);
+    patches_tst = zeros(sf_patch^2*4, N_tst*480*640/sf_patch^2);
+    patch = 1;
+    for img=1:N_trn
+      for i=1:sf_patch:480
+        for j=1:sf_patch:640
+          patches_trn(:,patch) = double([reshape(images_trn( ...
+              i:i+sf_patch-1,j:j+sf_patch-1,:,img), [], 1);...
+              reshape(labels_trn( ...
+              i:i+sf_patch-1,j:j+sf_patch-1, img), [], 1)]);
+          patch = patch + 1;
+        end
+      end
+    end
 
+    error('stop here')
     sf_mtx = sparseFiltering(sf_features, [img_lin_trn; lbl_lin_trn==class_ind]);
 end
 
