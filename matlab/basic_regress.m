@@ -7,8 +7,9 @@ load('../data/dev_dataset.mat')
 addpath(genpath('./SparseFiltering/'))
 try
   do_sparse_filtering;
-  sf_patch = 16;
-  sf_features = 20;
+  sf_patch = 32;
+  sf_L1_features = 16;
+  sf_L2_features = 20;
 catch
   do_sparse_filtering=false;
 end
@@ -51,21 +52,44 @@ if do_sparse_filtering
     % make patches of RGB+label, size sf_patch x sf_patch
     patches_trn = zeros(sf_patch^2*4, N_trn*480*640/sf_patch^2);
     patches_tst = zeros(sf_patch^2*4, N_tst*480*640/sf_patch^2);
-    patch = 1;
+    patch_trn = 1;
+    patch_tst = 1;
     for img=1:N_trn
       for i=1:sf_patch:480
         for j=1:sf_patch:640
-          patches_trn(:,patch) = double([reshape(images_trn( ...
+          patches_trn(:,patch_trn) = double([reshape(images_trn( ...
               i:i+sf_patch-1,j:j+sf_patch-1,:,img), [], 1);...
               reshape(labels_trn( ...
               i:i+sf_patch-1,j:j+sf_patch-1, img), [], 1)]);
-          patch = patch + 1;
+          patch_trn = patch_trn + 1;
+        end
+      end
+    end
+    for img=1:N_tst
+      for i=1:sf_patch:480
+        for j=1:sf_patch:640
+          patches_tst(:,patch_tst) = double([reshape(images_tst( ...
+              i:i+sf_patch-1,j:j+sf_patch-1,:,img), [], 1);...
+              reshape(labels_tst( ...
+              i:i+sf_patch-1,j:j+sf_patch-1, img), [], 1)]);
+          patch_tst = patch_tst + 1;
         end
       end
     end
 
-    error('stop here')
-    sf_mtx = sparseFiltering(sf_features, [img_lin_trn; lbl_lin_trn==class_ind]);
+    % subtract DC component
+    patches_trn = patches_trn - repmat(mean(patches_trn), sf_patch^2*4, 1);
+    patches_tst = patches_tst - repmat(mean(patches_tst), sf_patch^2*4, 1);
+
+    sf_L1 = sparseFiltering(sf_L1_features, patches_trn);
+
+    L1_trn = reshape(sf_L1 * patches_trn, [], N_trn);
+    L1_tst = reshape(sf_L1 * patches_tst, [], N_tst);
+
+    sf_L2 = sparseFiltering(sf_L2_features, L1_trn);
+
+    L2_trn = sf_L2 * L1_trn;
+    L2_tst = sf_L2 * L1_tst;
 end
 
 for ii=1:length(trn_inds)
@@ -116,6 +140,9 @@ toc
 x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, tan(dx_trn/2), tan(dy_trn/2)];
 % x_in = [npix_trn, dx_trn, dy_trn, cn_trn, cx_trn, cy_trn];
 % x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn];%, cn_trn, cx_trn, cy_trn];
+if do_sparse_filtering
+  x_in = [x_in, L2_trn(:,trn_inds)'];
+end
 y_lab = avg_depth_trn;
 
 % run the regression
@@ -215,6 +242,10 @@ avg_depth_tst = avg_depth_tst.';
 % x_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, cn_tst, cx_tst, cy_tst];
 x_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, tan(dx_tst/2), tan(dy_tst/2)];
 y_tst = avg_depth_tst;
+
+if do_sparse_filtering
+  x_tst = [x_tst, L2_trn(:,tst_inds)'];
+end
 
 % do prediction
 y_pred_tst = x_tst*beta;
