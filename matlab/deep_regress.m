@@ -1,7 +1,7 @@
 % train regression for given object class and evaluate on test datasets
 % provided; the labels contain just 0/1 to only indicate the object of interest
 
-function [avg_depth_trn, y_trn_pred, avg_depth_tst, y_tst_pred] = deep_regress(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst)
+function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred] = deep_regress(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst)
 
 % parameters--TODO: convert (some? all?) these to function parameters with default values
 er_r = 10; % Image erode filter radius
@@ -15,14 +15,16 @@ im_x_mid = 640/2;
 im_y_mid = 480/2;
 
 % Feature Training Extraction
-npix_trn = []; npix_tst = [];
-dx_trn = [];   dx_tst = [];
-dy_trn = [];   dy_tst = [];
-x_trn = [];    x_tst = [];
-y_trn = [];    y_tst = [];
-cn_trn = [];   cn_tst = [];
-cx_trn = [];   cx_tst = [];
-cy_trn = [];   cy_tst = [];
+npix_trn = [];   npix_tst = [];
+dx_trn = [];     dx_tst = [];
+dy_trn = [];     dy_tst = [];
+dx_inv_trn = []; dx_inv_tst = [];
+dy_inv_trn = []; dy_inv_tst = [];
+x_trn = [];      x_tst = [];
+y_trn = [];      y_tst = [];
+cn_trn = [];     cn_tst = [];
+cx_trn = [];     cx_tst = [];
+cy_trn = [];     cy_tst = [];
 
 % Label Training Extraction
 avg_depth_trn = []; avg_depth_tst = [];
@@ -43,6 +45,8 @@ for ii=1:size(images_trn, 4)
     npix_trn = [npix_trn; n_pix];
     dx_trn = [dx_trn; obj_dx];
     dy_trn = [dy_trn; obj_dy];
+    dx_inv_trn = [dx_inv_trn; 1/obj_dx];
+    dy_inv_trn = [dy_inv_trn; 1/obj_dy];
     x_trn = [x_trn; obj_x_mid];
     y_trn = [y_trn; obj_y_mid];
     avg_depth_trn = [avg_depth_trn; avg_depth];
@@ -83,6 +87,8 @@ for ii=1:size(images_tst, 4)
     npix_tst = [npix_tst; n_pix];
     dx_tst = [dx_tst; obj_dx];
     dy_tst = [dy_tst; obj_dy];
+    dx_inv_tst = [dx_inv_tst; 1/obj_dx];
+    dy_inv_tst = [dy_inv_tst; 1/obj_dy];
     x_tst = [x_tst; obj_x_mid];
     y_tst = [y_tst; obj_y_mid];
     avg_depth_tst = [avg_depth_tst; avg_depth];
@@ -107,22 +113,21 @@ for ii=1:size(images_tst, 4)
   end
 end
 
-x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, atan(dx_trn/2), tan(dy_trn/2), ones(size(npix_trn))]; % final is bias term
-x_in_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, atan(dx_tst/2), tan(dy_tst/2), ones(size(npix_tst))]; % final is bias term
+x_baseline_trn = [dx_inv_trn, dy_inv_trn];
+x_baseline_tst = [dx_inv_tst, dy_inv_tst];
+x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, ones(size(npix_trn))]; % final is bias term
+x_in_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, ones(size(npix_tst))]; % final is bias term
 if do_corners
   x_in = [x_in, cn_trn, cx_trn, cy_trn];
   x_in_tst = [x_in, cn_tst, cx_tst, cy_tst];
 end
 
-y_lab = avg_depth_trn;
-
-size(x_in)
-size(y_lab)
-[beta, sigma] = mvregress(x_in, y_lab);
+[beta, sigma] = mvregress(x_in, avg_depth_trn);
+[beta_baseline, sigma_baseline] = mvregress([dx_inv_trn, dy_inv_trn], avg_depth_trn);
 y_trn_pred = x_in * beta;
+y_trn_bsl_pred = x_in * beta_baseline;
 
 y_tst_pred = x_in_tst * beta;
-
-% TODO: also calculate baseline(s)
+y_tst_bsl_pred = x_in_tst * beta_baseline;
 
 end
