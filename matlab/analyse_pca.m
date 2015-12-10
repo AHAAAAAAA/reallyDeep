@@ -25,5 +25,10 @@ P=P(:, 1:3);
 
 save('g20sofaDev.mat', 'granu', 'class_type', 'class_ind', 'trn_inds', 'tst_inds', 'W', 'pc', 'P')
 
-%plot(pc(1,:),pc(2,:),'.'); 
-%title('{\bf PCA} by princomp'); xlabel('PC 1'); ylabel('PC 2')
+figure;
+scatter3(P(tst_inds, 1), P(tst_inds, 2), P(tst_inds, 3), '*'); 
+hold all;
+scatter3(P(tst_not_inds, 1),P(tst_not_inds,2), P(tst_not_inds, 3), 'o'); 
+hold off;
+view(90, 30);
+%title('{\bf PCA} by princomp'); xlabel('PC 1'); ylabel('PC 2');
