@@ -29,8 +29,8 @@ function [img_out, dep_out, lbl_out] = preprocess(images, depths, labels, class_
         for kk = 1:CC.NumObjects
             matrix_ziso = zeros(size(labels(:,:,jj)));
             matrix_ziso(CC.PixelIdxList{kk}) = 1;
-            img_out = [img_out; images(:,:,:,jj)];
-            dep_out = [dep_out; depths(:,:,jj)];
-            lbl_out = [lbl_out; matrix_ziso];
+            img_out = cat(4, img_out, images(:,:,:,jj));
+            dep_out = cat(3, dep_out, depths(:,:,jj));
+            lbl_out = cat(3, lbl_out, matrix_ziso);
         end
     end
