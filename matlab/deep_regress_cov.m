@@ -8,8 +8,8 @@ er_r = 10; % Image erode filter radius
 di_r = 8; % Image dialation filter radius
 n_pix_thresh = 1000; % minimum number of pixels to accept for training
 dist_thresh = 3.5; % maximum distance to accept for training
-c_points = 10; % number of corners to detect
-do_corners = false;
+c_points = 5; % number of corners to detect
+do_corners = true;
 
 im_x_mid = 640/2;
 im_y_mid = 480/2;
@@ -52,8 +52,11 @@ for ii=1:size(images_trn, 4)
     avg_depth_trn = [avg_depth_trn; avg_depth];
 
     if do_corners
-      isolated_image = image_gray .* labels(:,:,ii);
-
+      matrix_gray = zeros(480,640);
+      matrix_gray(obj_inds) = image_gray(obj_inds);
+      x_shift = round(obj_x_mid-im_x_mid);
+      y_shift = round(obj_y_mid-im_y_mid);
+      mat_shift = circshift(matrix_gray,[-y_shift,-x_shift]);
       % find corners
       C = corner(mat_shift);
       Cn = size(C,1);
@@ -94,8 +97,11 @@ for ii=1:size(images_tst, 4)
     avg_depth_tst = [avg_depth_tst; avg_depth];
 
     if do_corners
-      isolated_image = image_gray .* labels(:,:,ii);
-
+      matrix_gray = zeros(480,640);
+      matrix_gray(obj_inds) = image_gray(obj_inds);
+      x_shift = round(obj_x_mid-im_x_mid);
+      y_shift = round(obj_y_mid-im_y_mid);
+      mat_shift = circshift(matrix_gray,[-y_shift,-x_shift]);
       % find corners
       C = corner(mat_shift);
       Cn = size(C,1);
@@ -118,8 +124,8 @@ x_baseline_tst = [dx_inv_tst, dy_inv_tst];
 x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, ones(size(npix_trn))]; % final is bias term
 x_in_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, ones(size(npix_tst))]; % final is bias term
 if do_corners
-  x_in = [x_in, cn_trn, cx_trn, cy_trn];
-  x_in_tst = [x_in, cn_tst, cx_tst, cy_tst];
+    x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, cn_trn, ones(size(npix_trn))]; % final is bias term
+    x_in_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, cn_tst, ones(size(npix_tst))]; % final is bias term
 end
 
 [beta, sigma, resid, var_class] = mvregress(x_in, avg_depth_trn);

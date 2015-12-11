@@ -4,17 +4,21 @@ clear,clc,close('all')
 load /home/aanderson/Documents/MATLAB/dev_dataset.mat
 %%
 tic
+
 n_classes = length(names);
+n_class_f = 9;% number of classifier features
+n_base_f = 2; % number of base features
 train_error = zeros(1, n_classes);
 train_baseline = zeros(1, n_classes);
 test_error = zeros(1, n_classes);
 test_baseline = zeros(1, n_classes);
 sigma_base_vec = zeros(1,n_classes);
 sigma_class_vec = zeros(1,n_classes);
-% beta_class_arr
-% beta_base_arr
+beta_class_arr = zeros(n_class_f,n_classes);
+beta_base_arr = zeros(n_base_f,n_classes);
 % var_class_arr
 % var_base_arr
+
 
 for class = 1:n_classes
   [img_trn, dep_trn, lbl_trn] = preprocess(images_trn, depths_trn, labels_trn, class);
@@ -27,8 +31,8 @@ for class = 1:n_classes
     test_baseline(class) = norm(avg_depth_tst - y_tst_bsl_pred);
     sigma_base_vec(class) = sigma_base;
     sigma_class_vec(class) = sigma_class;
-    beta_class_arr{class} = beta_class;
-    beta_base_arr{class} = beta_base;
+    beta_class_arr(:,class) = beta_class;
+    beta_base_arr(:,class) = beta_base;
     var_class_arr{class} = var_class;
     var_base_arr{class} = var_base;
   catch
@@ -38,8 +42,8 @@ for class = 1:n_classes
     test_baseline(class) = NaN;
     sigma_base_vec(class) = NaN;
     sigma_class_vec(class) = NaN;
-    beta_class_arr{class} = NaN;
-    beta_base_arr{class} = NaN;
+    beta_class_arr(:,class) = NaN*ones(n_class_f,1);
+    beta_base_arr(:,class) = NaN*ones(n_base_f,1);
     var_class_arr{class} = NaN;
     var_base_arr{class} = NaN;
   end
@@ -81,7 +85,7 @@ grid('on')
 legend('Baseline','Custom')
 xlabel('Class Index')
 ylabel('Norm of Error (m)')
-title('Training Error')
+title('Testing Error')
 subplot(2,1,2)
 plot(class_vec(isfinite(test_error)),100*(test_baseline(isfinite(test_baseline))-test_error(isfinite(test_error)))./(test_baseline(isfinite(test_baseline))))
 line([min(class_vec(isfinite(test_error))),max(class_vec(isfinite(test_error)))],[0,0],'Color',[1,0,0])
@@ -102,3 +106,23 @@ legend('Baseline','Custom')
 xlabel('Class Index')
 ylabel('Prediction Std Dev (m)')
 title('Std Dev Comparison')
+boldify
+% Beta Values for Baseline
+val_ind = isfinite(test_error);
+figure(4)
+clf(4)
+plot(class_vec(isfinite(test_error)),(beta_base_arr(:,val_ind)))
+xlabel('Class Index')
+ylabel('Beta Value')
+title('Beta Values for Baseline')
+grid('on')
+boldify
+% Beta Values for Custom Classifier
+figure(5)
+clf(5)
+plot(class_vec(isfinite(test_error)),(beta_class_arr(:,val_ind)))
+xlabel('Class Index')
+ylabel('Beta Value')
+title('Beta Values for Classifier')
+grid('on')
+boldify
