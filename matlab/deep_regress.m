@@ -125,9 +125,9 @@ end
 [beta, sigma] = mvregress(x_in, avg_depth_trn);
 [beta_baseline, sigma_baseline] = mvregress([dx_inv_trn, dy_inv_trn], avg_depth_trn);
 y_trn_pred = x_in * beta;
-y_trn_bsl_pred = x_in * beta_baseline;
+y_trn_bsl_pred = x_baseline_trn * beta_baseline;
 
 y_tst_pred = x_in_tst * beta;
-y_tst_bsl_pred = x_in_tst * beta_baseline;
+y_tst_bsl_pred = x_baseline_tst * beta_baseline;
 
 end
