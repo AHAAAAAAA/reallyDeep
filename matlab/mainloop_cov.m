@@ -13,7 +13,7 @@ c_points = 8;
 er_r = 6; % Image erode filter radius
 di_r = 5; % Image dialation filter radius
 n_pix_thresh = 1000; % minimum number of pixels to accept for training
-dist_thresh = 5; % maximum distance to accept for training
+dist_thresh = inf; % maximum distance to accept for training
 do_corners = true;
 
 train_error = zeros(1, n_classes);
@@ -28,6 +28,7 @@ sigma_base_vec = zeros(1,n_classes);
 
 tot_trn_dist = [];
 tot_tst_dist = [];
+tot_ft_stat_sig = [];
 % var_class_arr
 % var_base_arr
 
@@ -61,6 +62,7 @@ for class = 1:n_classes
         feat_stat_sig{class} = find(beta_stat<0.1);
         tot_trn_dist = [tot_trn_dist; avg_depth_trn];
         tot_tst_dist = [tot_tst_dist; avg_depth_tst];
+        tot_ft_stat_sig = [tot_ft_stat_sig; find(beta_stat<0.1)];
 
       catch
         train_error(class) = NaN;
@@ -180,7 +182,7 @@ ylabel('Feature Index')
 title('Best Feature for each Class')
 grid('on')
 subplot(2,2,2)
-hist(feat_best_vec(val_ind),n_class_f)
+hist(feat_best_vec(val_ind),1:n_class_f)
 xlabel('Feature Index')
 ylabel('Counts')
 title('Best Feature Histogram')
@@ -191,9 +193,18 @@ ylabel('Feature Index')
 title('Worst Feature for each Class')
 grid('on')
 subplot(2,2,4)
-hist(feat_worst_vec(val_ind),n_class_f)
+hist(feat_worst_vec(val_ind),1:n_class_f)
 xlabel('Feature Index')
 ylabel('Counts')
 title('Worst Feature Histogram')
 boldify
 feat_str
+%
+figure(7)
+clf(7)
+hist(tot_ft_stat_sig,1:n_class_f)
+xlabel('Feature Index')
+ylabel('Counts')
+title('Statistically Significant Features Histogram')
+grid('on')
+boldify

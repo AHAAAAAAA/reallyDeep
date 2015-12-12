@@ -4,7 +4,7 @@ clear,clc,close('all')
 load /home/aanderson/Documents/MATLAB/dev_dataset.mat
 %%
 clc
-class_type = 'column';
+class_type = 'chair';
 c_points = 8;
 er_r = 6; % Image erode filter radius
 di_r = 5; % Image dialation filter radius
@@ -102,7 +102,7 @@ boldify
 %% Feature Analysis
 [dum_val,f_best] = min(beta_stat);
 [dum_val,f_worst] = max(beta_stat);
-% f_best = 6;
+% f_best = 2;
 figure(3)
 clf(3)
 subplot(2,3,1)

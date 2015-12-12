@@ -7,6 +7,8 @@ function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, 
 %n_pix_thresh = 1000; % minimum number of pixels to accept for training
 %dist_thresh = 5; % maximum distance to accept for training
 %c_points = 5; % number of corners to detect
+
+% For more features add flags like this one:
 %do_corners = true;
 
 im_x_mid = 640/2;
@@ -20,6 +22,7 @@ dx_inv_trn = []; dx_inv_tst = [];
 dy_inv_trn = []; dy_inv_tst = [];
 x_trn = [];      x_tst = [];
 y_trn = [];      y_tst = [];
+% Corner arrays
 cn_trn = [];     cn_tst = [];
 cx_trn = [];     cx_tst = [];
 cy_trn = [];     cy_tst = [];
@@ -48,7 +51,8 @@ for ii=1:size(images_trn, 4)
     x_trn = [x_trn; obj_x_mid];
     y_trn = [y_trn; obj_y_mid];
     avg_depth_trn = [avg_depth_trn; avg_depth];
-
+    % If you want more features throw a flag like this to save
+    % processing 
     if do_corners
       matrix_gray = zeros(480,640);
       matrix_gray(obj_inds) = image_gray(obj_inds);
@@ -93,7 +97,8 @@ for ii=1:size(images_tst, 4)
     x_tst = [x_tst; obj_x_mid];
     y_tst = [y_tst; obj_y_mid];
     avg_depth_tst = [avg_depth_tst; avg_depth];
-
+    % If you want more features throw a flag like this to save
+    % processing 
     if do_corners
       matrix_gray = zeros(480,640);
       matrix_gray(obj_inds) = image_gray(obj_inds);
@@ -116,18 +121,25 @@ for ii=1:size(images_tst, 4)
     end
   end
 end
-
+% Base Classifiers
 x_baseline_trn = [dx_inv_trn, dy_inv_trn];
 x_baseline_tst = [dx_inv_tst, dy_inv_tst];
 x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn]; % final is bias term
 x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst]; % final is bias term
 feat_str = {'bias','npix','dx','dy','x pos','y pos','1/dx','1/dy'};
+% Add a flag for a new feature and add them like this:
 if do_corners
-    x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, cn_trn]; % final is bias term
-    x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, cn_tst]; % final is bias term
-    feat_str = {'bias','npix','dx','dy','x pos','y pos','1/dx','1/dy','num corn'};
+    x_in = [x_in, cn_trn]; % final is bias term
+    x_in_tst = [x_in_tst, cn_tst]; % final is bias term
+    feat_str{length(feat_str)+1} = 'num_corn';
 end
-
+% Check if we have enough data
+if(size(x_in,2)>=size(x_in,1))
+    msgID = 'MYFUN:BadRegress';
+    msg = 'Not enough data to perform this regression.';
+    baseException = MException(msgID,msg);
+    throw(baseException)
+end    
 mdl_out = fitlm(x_in(:,2:end), avg_depth_trn);
 beta =mdl_out.Coefficients.Estimate;
 beta_stat = mdl_out.Coefficients.pValue;
