@@ -1,15 +1,13 @@
 % train regression for given object class and evaluate on test datasets
 % provided; the labels contain just 0/1 to only indicate the object of interest
 
-function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred, beta_class, beta_base, sigma_class, sigma_base, var_class, var_base] = deep_regress_cov(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst)
+function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred, beta_class, beta_base, beta_stat, sigma_base, var_base, mdl_out,trn_sort,tst_sort,x_in,x_in_tst, feat_str] = deep_regress_cov(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst,n_pix_thresh,dist_thresh,c_points,do_corners)
 
 % parameters--TODO: convert (some? all?) these to function parameters with default values
-er_r = 10; % Image erode filter radius
-di_r = 8; % Image dialation filter radius
-n_pix_thresh = 1000; % minimum number of pixels to accept for training
-dist_thresh = 3.5; % maximum distance to accept for training
-c_points = 5; % number of corners to detect
-do_corners = true;
+%n_pix_thresh = 1000; % minimum number of pixels to accept for training
+%dist_thresh = 5; % maximum distance to accept for training
+%c_points = 5; % number of corners to detect
+%do_corners = true;
 
 im_x_mid = 640/2;
 im_y_mid = 480/2;
@@ -121,22 +119,36 @@ end
 
 x_baseline_trn = [dx_inv_trn, dy_inv_trn];
 x_baseline_tst = [dx_inv_tst, dy_inv_tst];
-x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, ones(size(npix_trn))]; % final is bias term
-x_in_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, ones(size(npix_tst))]; % final is bias term
+x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn]; % final is bias term
+x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst]; % final is bias term
+feat_str = {'bias','npix','dx','dy','x pos','y pos','1/dx','1/dy'};
 if do_corners
-    x_in = [npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, cn_trn, ones(size(npix_trn))]; % final is bias term
-    x_in_tst = [npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, cn_tst, ones(size(npix_tst))]; % final is bias term
+    x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, cn_trn]; % final is bias term
+    x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, cn_tst]; % final is bias term
+    feat_str = {'bias','npix','dx','dy','x pos','y pos','1/dx','1/dy','num corn'};
 end
 
-[beta, sigma, resid, var_class] = mvregress(x_in, avg_depth_trn);
-[beta_baseline, sigma_baseline, resid,var_base] = mvregress([dx_inv_trn, dy_inv_trn], avg_depth_trn);
+mdl_out = fitlm(x_in(:,2:end), avg_depth_trn);
+beta =mdl_out.Coefficients.Estimate;
+beta_stat = mdl_out.Coefficients.pValue;
+[beta_baseline, sigma_baseline, resid,var_base] = mvregress(x_baseline_trn, avg_depth_trn);
 y_trn_pred = x_in * beta;
 y_trn_bsl_pred = x_baseline_trn * beta_baseline;
-
 y_tst_pred = x_in_tst * beta;
 y_tst_bsl_pred = x_baseline_tst * beta_baseline;
+
+% Sort Training Data
+[avg_depth_trn,trn_sort] = sort(avg_depth_trn);
+y_trn_pred = y_trn_pred(trn_sort);
+y_trn_bsl_pred = y_trn_bsl_pred(trn_sort);
+
+% Sort Test Data
+[avg_depth_tst,tst_sort] = sort(avg_depth_tst);
+y_tst_pred = y_tst_pred(tst_sort);
+y_tst_bsl_pred = y_tst_bsl_pred(tst_sort);
+
+% Beta and Stats our
 beta_class = beta;
 beta_base = beta_baseline;
-sigma_class = sigma;
 sigma_base = sigma_baseline;
 end

@@ -8,44 +8,85 @@ tic
 n_classes = length(names);
 n_class_f = 9;% number of classifier features
 n_base_f = 2; % number of base features
+
+c_points = 8;
+er_r = 6; % Image erode filter radius
+di_r = 5; % Image dialation filter radius
+n_pix_thresh = 1000; % minimum number of pixels to accept for training
+dist_thresh = 5; % maximum distance to accept for training
+do_corners = true;
+
 train_error = zeros(1, n_classes);
 train_baseline = zeros(1, n_classes);
 test_error = zeros(1, n_classes);
 test_baseline = zeros(1, n_classes);
 sigma_base_vec = zeros(1,n_classes);
-sigma_class_vec = zeros(1,n_classes);
 beta_class_arr = zeros(n_class_f,n_classes);
 beta_base_arr = zeros(n_base_f,n_classes);
+feat_worst_vec = zeros(1,n_classes);
+sigma_base_vec = zeros(1,n_classes);
+
+tot_trn_dist = [];
+tot_tst_dist = [];
 % var_class_arr
 % var_base_arr
 
 
 for class = 1:n_classes
-  [img_trn, dep_trn, lbl_trn] = preprocess(images_trn, depths_trn, labels_trn, class);
-  [img_tst, dep_tst, lbl_tst] = preprocess(images_tst, depths_tst, labels_tst, class);
-  try
-    [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred, beta_class, beta_base, sigma_class, sigma_base, var_class, var_base] = deep_regress_cov(img_trn, dep_trn, lbl_trn, img_tst, dep_tst, lbl_tst);
-    train_error(class) = norm(avg_depth_trn - y_trn_pred);
-    train_baseline(class) = norm(avg_depth_trn - y_trn_bsl_pred);
-    test_error(class) = norm(avg_depth_tst - y_tst_pred);
-    test_baseline(class) = norm(avg_depth_tst - y_tst_bsl_pred);
-    sigma_base_vec(class) = sigma_base;
-    sigma_class_vec(class) = sigma_class;
-    beta_class_arr(:,class) = beta_class;
-    beta_base_arr(:,class) = beta_base;
-    var_class_arr{class} = var_class;
-    var_base_arr{class} = var_base;
-  catch
-    train_error(class) = NaN;
-    train_baseline(class) = NaN;
-    test_error(class) = NaN;
-    test_baseline(class) = NaN;
-    sigma_base_vec(class) = NaN;
-    sigma_class_vec(class) = NaN;
-    beta_class_arr(:,class) = NaN*ones(n_class_f,1);
-    beta_base_arr(:,class) = NaN*ones(n_base_f,1);
-    var_class_arr{class} = NaN;
-    var_base_arr{class} = NaN;
+  [img_trn, dep_trn, lbl_trn] = preprocess_par(images_trn, depths_trn, labels_trn, class,er_r,di_r);
+  [img_tst, dep_tst, lbl_tst] = preprocess_par(images_tst, depths_tst, labels_tst, class,er_r,di_r);
+  if(size(lbl_trn,3) > n_class_f)
+      try
+        % Big Data Call
+        [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred,...
+         y_tst_bsl_pred, beta_class, beta_base, beta_stat, sigma_base, var_base,...
+         mdl_out,trn_sort,tst_sort,x_in,x_in_tst,feat_str]...
+         = deep_regress_cov(...
+         img_trn, dep_trn, lbl_trn, img_tst, dep_tst,...
+         lbl_tst,n_pix_thresh,dist_thresh,c_points,do_corners);
+
+        train_error(class) = mean(abs(avg_depth_trn - y_trn_pred));
+        train_baseline(class) = mean(abs(avg_depth_trn - y_trn_bsl_pred));
+        test_error(class) = mean(abs(avg_depth_tst - y_tst_pred));
+        test_baseline(class) = mean(abs(avg_depth_tst - y_tst_bsl_pred));
+
+        sigma_base_vec(class) = sigma_base;
+        beta_class_arr(:,class) = beta_class;
+        beta_base_arr(:,class) = beta_base;
+        var_base_arr{class} = var_base;
+        [dum_val,f_best] = min(beta_stat);
+        [dum_val,f_worst] = max(beta_stat);
+        feat_best_vec(class) = f_best; 
+        feat_worst_vec(class) = f_worst;
+        feat_stat_sig{class} = find(beta_stat<0.1);
+        tot_trn_dist = [tot_trn_dist; avg_depth_trn];
+        tot_tst_dist = [tot_tst_dist; avg_depth_tst];
+
+      catch
+        train_error(class) = NaN;
+        train_baseline(class) = NaN;
+        test_error(class) = NaN;
+        test_baseline(class) = NaN;
+        sigma_base_vec(class) = NaN;
+        beta_class_arr(:,class) = NaN*ones(n_class_f,1);
+        beta_base_arr(:,class) = NaN*ones(n_base_f,1);
+        var_base_arr{class} = NaN;
+        feat_best_vec(class) = NaN; 
+        feat_worst_vec(class) = NaN;
+        feat_stat_sig{class} = NaN;
+      end
+  else
+        train_error(class) = NaN;
+        train_baseline(class) = NaN;
+        test_error(class) = NaN;
+        test_baseline(class) = NaN;
+        sigma_base_vec(class) = NaN;
+        beta_class_arr(:,class) = NaN*ones(n_class_f,1);
+        beta_base_arr(:,class) = NaN*ones(n_base_f,1);
+        var_base_arr{class} = NaN;
+        feat_best_vec(class) = NaN; 
+        feat_worst_vec(class) = NaN;
+        feat_stat_sig{class} = NaN;
   end
 end
 toc
@@ -94,19 +135,21 @@ xlabel('Class Index')
 ylabel('Percent Change')
 title('Percent Improvement Over Baseline')
 boldify
-% Sigma Out
+% Histograms of Label Data
 figure(3)
 clf(3)
-hold all
-plot(class_vec(isfinite(test_error)),sqrt(sigma_base_vec(isfinite(test_error))))
-plot(class_vec(isfinite(test_error)),sqrt(sigma_class_vec(isfinite(test_error))))
-hold off
-grid('on')
-legend('Baseline','Custom')
-xlabel('Class Index')
-ylabel('Prediction Std Dev (m)')
-title('Std Dev Comparison')
-boldify
+subplot(2,1,1)
+hist(tot_trn_dist,100)
+xlabel('Distance in m')
+ylabel('Counts')
+title('Training Data Histogram')
+subplot(2,1,2)
+hist(tot_tst_dist,20)
+xlabel('Distance in m')
+ylabel('Counts')
+title('Training Data Histogram')
+
+
 % Beta Values for Baseline
 val_ind = isfinite(test_error);
 figure(4)
@@ -126,3 +169,31 @@ ylabel('Beta Value')
 title('Beta Values for Classifier')
 grid('on')
 boldify
+
+% Good and Bad Beta Values
+figure(6)
+clf(6)
+subplot(2,2,1)
+plot(class_vec(isfinite(train_error)),feat_best_vec(val_ind),'bx')
+xlabel('Class Index')
+ylabel('Feature Index')
+title('Best Feature for each Class')
+grid('on')
+subplot(2,2,2)
+hist(feat_best_vec(val_ind),n_class_f)
+xlabel('Feature Index')
+ylabel('Counts')
+title('Best Feature Histogram')
+subplot(2,2,3)
+plot(class_vec(isfinite(train_error)),feat_worst_vec(val_ind),'bx')
+xlabel('Class Index')
+ylabel('Feature Index')
+title('Worst Feature for each Class')
+grid('on')
+subplot(2,2,4)
+hist(feat_worst_vec(val_ind),n_class_f)
+xlabel('Feature Index')
+ylabel('Counts')
+title('Worst Feature Histogram')
+boldify
+feat_str
