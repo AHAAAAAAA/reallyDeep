@@ -139,14 +139,19 @@ end
 % Base Classifiers
 x_baseline_trn = [dx_inv_trn, dy_inv_trn];
 x_baseline_tst = [dx_inv_tst, dy_inv_tst];
-x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, eigv_trn]; % final is bias term
-x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, eigv_tst]; % final is bias term
+x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn]; % final is bias term
+x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst]; % final is bias term
 feat_str = {'bias','npix','dx','dy','x pos','y pos','1/dx','1/dy'};
 % Add a flag for a new feature and add them like this:
 if do_corners
     x_in = [x_in, cn_trn]; % final is bias term
     x_in_tst = [x_in_tst, cn_tst]; % final is bias term
     feat_str{length(feat_str)+1} = 'num_corn';
+end
+if use_pca
+    x_in = [x_in, eigv_trn]; % final is bias term
+    x_in_tst = [x_in_tst, eigv_tst]; % final is bias term
+    feat_str{length(feat_str)+1} = 'pca_eigv';
 end
 % Check if we have enough data
 if(size(x_in,2)>=size(x_in,1))
