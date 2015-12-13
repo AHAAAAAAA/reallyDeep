@@ -1,7 +1,7 @@
 %%
 clear,clc,close('all')
-% load ../data/dev_dataset.mat
-load /home/aanderson/Documents/MATLAB/dev_dataset.mat
+load ../data/dev_dataset.mat
+%load /home/aanderson/Documents/MATLAB/dev_dataset.mat
 %%
 clc
 class_type = 'chair';
@@ -11,6 +11,7 @@ di_r = 5; % Image dialation filter radius
 n_pix_thresh = 1000; % minimum number of pixels to accept for training
 dist_thresh = 5; % maximum distance to accept for training
 do_corners = true;
+use_pca = true;
 tic
 
 % Find the index
@@ -26,7 +27,7 @@ tic
  mdl_out,trn_sort,tst_sort,x_in,x_in_tst,feat_str]...
  = deep_regress_cov(...
  img_trn, dep_trn, lbl_trn, img_tst, dep_tst,...
- lbl_tst,n_pix_thresh,dist_thresh,c_points,do_corners);
+ lbl_tst,n_pix_thresh,dist_thresh,c_points,do_corners, use_pca);
 % 
 clc
 toc

@@ -1,7 +1,7 @@
 % train regression for given object class and evaluate on test datasets
 % provided; the labels contain just 0/1 to only indicate the object of interest
 
-function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred, beta_class, beta_base, beta_stat, sigma_base, var_base, mdl_out,trn_sort,tst_sort,x_in,x_in_tst, feat_str] = deep_regress_cov(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst,n_pix_thresh,dist_thresh,c_points,do_corners)
+function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred, beta_class, beta_base, beta_stat, sigma_base, var_base, mdl_out,trn_sort,tst_sort,x_in,x_in_tst, feat_str] = deep_regress_cov(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst,n_pix_thresh,dist_thresh,c_points,do_corners, use_pca)
 
 % parameters--TODO: convert (some? all?) these to function parameters with default values
 %n_pix_thresh = 1000; % minimum number of pixels to accept for training
@@ -30,6 +30,9 @@ cy_trn = [];     cy_tst = [];
 % Label Training Extraction
 avg_depth_trn = []; avg_depth_tst = [];
 
+% using pca
+eigv_trn = [];	 eigv_tst = [];
+
 % build training feature vectors
 loop_count_trn = 0;
 for ii=1:size(images_trn, 4)
@@ -51,6 +54,12 @@ for ii=1:size(images_trn, 4)
     x_trn = [x_trn; obj_x_mid];
     y_trn = [y_trn; obj_y_mid];
     avg_depth_trn = [avg_depth_trn; avg_depth];
+	
+	if use_pca == true 
+		B = cast(image_gray, 'double');
+		ev = svd(B);
+		eigv_trn = [eigv_trn; ev(1)];
+	end
     % If you want more features throw a flag like this to save
     % processing 
     if do_corners
@@ -97,6 +106,12 @@ for ii=1:size(images_tst, 4)
     x_tst = [x_tst; obj_x_mid];
     y_tst = [y_tst; obj_y_mid];
     avg_depth_tst = [avg_depth_tst; avg_depth];
+	
+	if use_pca == true 
+		B = cast(image_gray, 'double');
+		ev = svd(B);
+		eigv_tst= [eigv_tst; ev(1)];
+	end
     % If you want more features throw a flag like this to save
     % processing 
     if do_corners
@@ -124,8 +139,8 @@ end
 % Base Classifiers
 x_baseline_trn = [dx_inv_trn, dy_inv_trn];
 x_baseline_tst = [dx_inv_tst, dy_inv_tst];
-x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn]; % final is bias term
-x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst]; % final is bias term
+x_in = [ones(size(npix_trn)), npix_trn, dx_trn, dy_trn, x_trn, y_trn, dx_inv_trn, dy_inv_trn, eigv_trn]; % final is bias term
+x_in_tst = [ones(size(npix_tst)), npix_tst, dx_tst, dy_tst, x_tst, y_tst, dx_inv_tst, dy_inv_tst, eigv_tst]; % final is bias term
 feat_str = {'bias','npix','dx','dy','x pos','y pos','1/dx','1/dy'};
 % Add a flag for a new feature and add them like this:
 if do_corners

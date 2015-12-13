@@ -15,6 +15,7 @@ di_r = 5; % Image dialation filter radius
 n_pix_thresh = 1000; % minimum number of pixels to accept for training
 dist_thresh = inf; % maximum distance to accept for training
 do_corners = true;
+use_pca = true;
 
 train_error = zeros(1, n_classes);
 train_baseline = zeros(1, n_classes);
@@ -44,7 +45,7 @@ for class = 1:n_classes
          mdl_out,trn_sort,tst_sort,x_in,x_in_tst,feat_str]...
          = deep_regress_cov(...
          img_trn, dep_trn, lbl_trn, img_tst, dep_tst,...
-         lbl_tst,n_pix_thresh,dist_thresh,c_points,do_corners);
+         lbl_tst,n_pix_thresh,dist_thresh,c_points,do_corners, use_pca);
 
         train_error(class) = mean(abs(avg_depth_trn - y_trn_pred));
         train_baseline(class) = mean(abs(avg_depth_trn - y_trn_bsl_pred));
