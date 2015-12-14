@@ -105,7 +105,7 @@ boldify
 [dum_val,f_best] = min(beta_stat);
 [dum_val,f_worst] = max(beta_stat);
 f_best = 10;
-save('oneobjrunresult.m', 'avg_depth_trn', 'trn_sort', 'f_best', 'f_worst', 'feat_str', 'beta_stat', 'class_type', 'avg_depth_tst', 'x_in_tst', 'x_in'); 
+save('/tmp/oneobjrunresult.mat', 'avg_depth_trn', 'trn_sort', 'f_best', 'f_worst', 'feat_str', 'beta_stat', 'class_type', 'avg_depth_tst', 'x_in_tst', 'x_in', 'tst_sort'); 
 figure(3)
 clf(3)
 subplot(2,3,1)
