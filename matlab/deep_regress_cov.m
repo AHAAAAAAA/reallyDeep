@@ -1,7 +1,7 @@
 % train regression for given object class and evaluate on test datasets
 % provided; the labels contain just 0/1 to only indicate the object of interest
 
-function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred, beta_class, beta_base, beta_stat, sigma_base, var_base, mdl_out,trn_sort,tst_sort,x_in,x_in_tst, feat_str] = deep_regress_cov(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst,n_pix_thresh,dist_thresh,c_points,do_corners, use_pca)
+function [avg_depth_trn, y_trn_pred, y_trn_bsl_pred, avg_depth_tst, y_tst_pred, y_tst_bsl_pred, beta_class, beta_base, beta_stat, sigma_base, var_base, mdl_out,trn_sort,tst_sort,x_in,x_in_tst, feat_str] = deep_regress_cov(images_trn, depths_trn, labels_trn, images_tst, depths_tst, labels_tst,n_pix_thresh,dist_thresh,c_points,do_corners, use_pca, water_filling_option)
 
 % parameters--TODO: convert (some? all?) these to function parameters with default values
 %n_pix_thresh = 1000; % minimum number of pixels to accept for training
@@ -33,6 +33,9 @@ avg_depth_trn = []; avg_depth_tst = [];
 % using pca
 eigv_trn = [];	 eigv_tst = [];
 
+% use water_filling
+diff_trn = []; diff_tst = [];
+
 % build training feature vectors
 loop_count_trn = 0;
 for ii=1:size(images_trn, 4)
@@ -59,6 +62,12 @@ for ii=1:size(images_trn, 4)
 		B = cast(image_gray, 'double');
 		ev = svd(B);
 		eigv_trn = [eigv_trn; ev(1)];
+	end
+	
+	if water_filling_option  == 1
+		B = cast(image_gray, 'double');
+		[lo, hi] = water_filling(B)
+		diff_trn = [diff_trn; hi - lo] 
 	end
     % If you want more features throw a flag like this to save
     % processing 
@@ -112,6 +121,11 @@ for ii=1:size(images_tst, 4)
 		ev = svd(B);
 		eigv_tst= [eigv_tst; ev(1)];
 	end
+	if water_filling_option  == 1
+		B = cast(image_gray, 'double');
+		[lo, hi] = water_filling(B)
+		diff_tst = [diff_tst; hi - lo] 
+	end
     % If you want more features throw a flag like this to save
     % processing 
     if do_corners
@@ -152,6 +166,11 @@ if use_pca
     x_in = [x_in, eigv_trn]; % final is bias term
     x_in_tst = [x_in_tst, eigv_tst]; % final is bias term
     feat_str{length(feat_str)+1} = 'pca_eigv';
+end
+if water_filling_option == 1
+	x_in = [x_in, diff_trn]
+	x_in_tst = [x_in_tst, diff_tst]
+    feat_str{length(feat_str)+1} = 'water_filling_gray_diff';
 end
 % Check if we have enough data
 if(size(x_in,2)>=size(x_in,1))

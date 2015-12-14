@@ -12,6 +12,7 @@ n_pix_thresh = 1000; % minimum number of pixels to accept for training
 dist_thresh = 5; % maximum distance to accept for training
 do_corners = true;
 use_pca = true;
+water_filling_option = 1
 tic
 
 % Find the index
@@ -27,7 +28,7 @@ tic
  mdl_out,trn_sort,tst_sort,x_in,x_in_tst,feat_str]...
  = deep_regress_cov(...
  img_trn, dep_trn, lbl_trn, img_tst, dep_tst,...
- lbl_tst,n_pix_thresh,dist_thresh,c_points,do_corners, use_pca);
+ lbl_tst,n_pix_thresh,dist_thresh,c_points,do_corners, use_pca, water_filling_option);
 % 
 clc
 toc
@@ -103,7 +104,7 @@ boldify
 %% Feature Analysis
 [dum_val,f_best] = min(beta_stat);
 [dum_val,f_worst] = max(beta_stat);
-% f_best = 2;
+f_best = 10;
 save('oneobjrunresult.m', 'avg_depth_trn', 'trn_sort', 'f_best', 'f_worst', 'feat_str', 'beta_stat', 'class_type', 'avg_depth_tst', 'x_in_tst', 'x_in'); 
 figure(3)
 clf(3)
