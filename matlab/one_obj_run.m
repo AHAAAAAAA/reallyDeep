@@ -12,7 +12,7 @@ n_pix_thresh = 1000; % minimum number of pixels to accept for training
 dist_thresh = 5; % maximum distance to accept for training
 do_corners = true;
 use_pca = true;
-water_filling_option = 1
+water_filling_option = 1;
 tic
 
 % Find the index
