@@ -104,7 +104,7 @@ boldify
 %% Feature Analysis
 [dum_val,f_best] = min(beta_stat);
 [dum_val,f_worst] = max(beta_stat);
-f_best = 10;
+f_best = 11;
 save('/tmp/oneobjrunresult.mat', 'avg_depth_trn', 'trn_sort', 'f_best', 'f_worst', 'feat_str', 'beta_stat', 'class_type', 'avg_depth_tst', 'x_in_tst', 'x_in', 'tst_sort'); 
 figure(3)
 clf(3)

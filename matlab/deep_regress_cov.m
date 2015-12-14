@@ -66,7 +66,7 @@ for ii=1:size(images_trn, 4)
 	
 	if water_filling_option  == 1
 		B = cast(image_gray, 'double');
-		[lo, hi] = water_filling(B)
+		[lo, hi] = water_flooding(B)
 		diff_trn = [diff_trn; hi - lo] 
 	end
     % If you want more features throw a flag like this to save
@@ -123,7 +123,7 @@ for ii=1:size(images_tst, 4)
 	end
 	if water_filling_option  == 1
 		B = cast(image_gray, 'double');
-		[lo, hi] = water_filling(B)
+		[lo, hi] = water_flooding(B)
 		diff_tst = [diff_tst; hi - lo] 
 	end
     % If you want more features throw a flag like this to save
