@@ -26,6 +26,5 @@ function [lo, hi] = water_filling_rec(obj, w, h, i, j, gap)
 			lo = min(tl, lo);
 			hi = max(hi, th);
 		end
-		set(obj, i, j, oldValue);
 	end
 end 
