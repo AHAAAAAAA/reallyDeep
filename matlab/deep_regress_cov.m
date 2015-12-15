@@ -65,7 +65,7 @@ for ii=1:size(images_trn, 4)
 	end
 	
 	if water_filling_option  == 1
-		[lo, hi] = water_flooding(image_gray, 10);
+		[lo, hi] = water_flooding(image_gray, 100);
 		diff_trn = [diff_trn; hi - lo] 
 	end
     % If you want more features throw a flag like this to save
@@ -121,7 +121,7 @@ for ii=1:size(images_tst, 4)
 		eigv_tst= [eigv_tst; ev(1)];
 	end
 	if water_filling_option  == 1
-		[lo, hi] = water_flooding(image_gray, 10);
+		[lo, hi] = water_flooding(image_gray, 40);
 		diff_tst = [diff_tst; hi - lo] 
 	end
     % If you want more features throw a flag like this to save
