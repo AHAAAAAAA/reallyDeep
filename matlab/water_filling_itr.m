@@ -3,7 +3,7 @@ function [lo, hi] = water_filling_itr(obj, st, w, h, I, J, gap)
 	hi = 0;
 	st.top = 0;
 
-	origin = get(obj, I, J);
+	origin = get(obj, I, J)
 	lo = min(lo, origin);
 	hi = max(hi, origin);
 	set(obj, I, J, 0);
@@ -12,7 +12,7 @@ function [lo, hi] = water_filling_itr(obj, st, w, h, I, J, gap)
 		r = st.data(st.top, :);
 		i = r(1);
 		j = r(2);
-		v = r(3);
+		v = r(3)
 		origin = r(4);
 
 		if v == 4
@@ -30,7 +30,7 @@ function [lo, hi] = water_filling_itr(obj, st, w, h, I, J, gap)
 			end
 			if i > 0 && i <= w && j > 0 && j <= h
 				nbvalue = get(obj, i, j);
-				if nbvalue > origin - gap && nbvalue < origin + gap 
+				if nbvalue > 0 && abs( nbvalue - origin ) < gap 
 					lo = min(lo, nbvalue);
 					hi = max(hi, nbvalue);
 					set(obj, i, j, 0);
