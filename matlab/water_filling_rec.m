@@ -6,6 +6,8 @@ function [lo, hi] = water_filling_rec(obj, w, h, i, j, gap)
 		hi = max(hi, get(obj, i, j));
 		oldValue = get(obj, i, j);
 		set(obj, i, j, 0);
+		i
+		j
 		if j - 1 > 0 &&  oldValue + gap > get(obj, i, j - 1) && oldValue - gap < get(obj, i, j - 1) 
 			[tl, th] = water_filling_rec(obj, w, h, i, j - 1, gap);
 			lo = min(tl, lo);

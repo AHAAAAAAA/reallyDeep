@@ -1,18 +1,20 @@
-function [lo, hi] = water_filling_itr(obj, st, w, h, I, J, gap)
+function [lo, hi, area] = water_filling_itr(obj, st, w, h, I, J, gap)
 	lo = 255;
 	hi = 0;
 	st.top = 0;
+	area = 0;
 
-	origin = get(obj, I, J)
+	origin = get(obj, I, J);
 	lo = min(lo, origin);
 	hi = max(hi, origin);
 	set(obj, I, J, 0);
 	push(st, I, J, 0, origin);
 	while st.top > 0
+		area = max(area, st.top);
 		r = st.data(st.top, :);
 		i = r(1);
 		j = r(2);
-		v = r(3)
+		v = r(3);
 		origin = r(4);
 
 		if v == 4
