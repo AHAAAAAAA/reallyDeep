@@ -1,7 +1,7 @@
 %%
 clear,clc,close('all')
 n_classes = 894;
-n_class_f = 9;% number of classifier features
+n_class_f = 10;% number of classifier features
 n_base_f = 2; % number of base features
 
 c_points = 8;
@@ -11,7 +11,7 @@ n_pix_thresh = 1000; % minimum number of pixels to accept for training
 dist_thresh = inf; % maximum distance to accept for training
 do_corners = true;
 
-load('big_proc_rd.mat')
+load('data_proc_ds.mat')
 feat_str = {'bias','npix','dx','dy','x pos','y pos','1/dx','1/dy'};
 feat_str{length(feat_str)+1} = 'num_corn';
 
@@ -108,6 +108,7 @@ title('Best Feature for each Class')
 grid('on')
 subplot(2,2,2)
 hist(feat_best_vec(val_ind),1:n_class_f)
+xlim([0,n_class_f+1])
 xlabel('Feature Index')
 ylabel('Counts')
 title('Best Feature Histogram')
@@ -119,6 +120,7 @@ title('Worst Feature for each Class')
 grid('on')
 subplot(2,2,4)
 hist(feat_worst_vec(val_ind),1:n_class_f)
+xlim([0,n_class_f+1])
 xlabel('Feature Index')
 ylabel('Counts')
 title('Worst Feature Histogram')
@@ -128,6 +130,7 @@ feat_str
 figure(7)
 clf(7)
 hist(tot_ft_stat_sig,1:n_class_f)
+xlim([0,n_class_f+1])
 xlabel('Feature Index')
 ylabel('Counts')
 title('Statistically Significant Features Histogram')
