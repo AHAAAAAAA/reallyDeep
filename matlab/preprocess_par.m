@@ -1,8 +1,6 @@
-function [img_out, dep_out, lbl_out] = preprocess(images, depths, labels, class_ind)
-    er_r = 10; % Image erode filter radius
-    di_r = 8; % Image dialation filter radius
-    n_pix_thresh = 1000; % minimum number of pixels to accept for training
-    dist_thresh = 3.5; % maximum distance to accept for training
+function [img_out, dep_out, lbl_out] = preprocess_par(images, depths, labels, class_ind,er_r,di_r)
+   % er_r = 6; % Image erode filter radius
+   % di_r = 8; % Image dialation filter radius
 
     % get indices of images in training and test sets
     trn_inds = find_rel_pics(labels,class_ind);
